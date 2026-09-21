@@ -5,9 +5,13 @@ import { createServer, type Server } from 'http';
 import express from 'express';
 import router from './routes/index';
 import { setupVite } from './vite';
+import { ensureEnv, isProd } from './src/storage/database/supabase-client';
 
-const isDev = process.env.COZE_PROJECT_ENV !== 'PROD';
-const port = parseInt(process.env.PORT || '5000', 10);
+// 必须在读取任何环境变量之前加载 .env
+ensureEnv();
+
+const isDev = !isProd();
+const port = parseInt(process.env.DEPLOY_RUN_PORT || process.env.PORT || '5000', 10);
 const hostname = process.env.HOSTNAME || 'localhost';
 const app = express();
 // 使用 http.createServer 包装 Express app，以便支持 WebSocket 等协议升级

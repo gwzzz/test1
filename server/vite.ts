@@ -5,19 +5,16 @@ import type { Application, Request, Response } from 'express';
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { createServer as createViteServer } from 'vite';
-import viteConfig from '../vite.config';
-
-const isDev = process.env.COZE_PROJECT_ENV !== 'PROD';
+import { isProd } from './src/storage/database/supabase-client';
 
 /**
  * 集成 Vite 开发服务器（中间件模式）
  */
 export async function setupViteMiddleware(app: Application) {
+  const { createServer: createViteServer } = await import('vite');
   const vite = await createViteServer({
-    ...viteConfig,
+    root: process.cwd(),
     server: {
-      ...viteConfig.server,
       middlewareMode: true,
     },
     appType: 'spa',
@@ -59,7 +56,7 @@ export function setupStaticServer(app: Application) {
  * 根据环境设置 Vite
  */
 export async function setupVite(app: Application) {
-  if (isDev) {
+  if (!isProd()) {
     await setupViteMiddleware(app);
   } else {
     setupStaticServer(app);
