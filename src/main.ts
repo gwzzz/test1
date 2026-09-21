@@ -76,9 +76,8 @@ function buildLayout(books: Book[], products: Product[]): string {
   <div class="min-h-screen">
     <header id="siteNav" class="fixed inset-x-0 top-0 z-50 transition-all duration-500">
       <nav class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <a href="#top" class="flex items-center gap-2">
-          <span class="text-2xl">📚</span>
-          <span class="serif-title text-lg font-bold tracking-wide">千遇绘本</span>
+        <a href="#top" class="flex items-center">
+          <img src="/logo.jpg" alt="千遇文化 logo" class="h-11 w-auto" />
         </a>
         <div class="hidden items-center gap-8 text-sm text-ink-soft md:flex">
           <a href="#about" class="transition-colors hover:text-ink">关于</a>
