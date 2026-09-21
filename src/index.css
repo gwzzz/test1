@@ -1,21 +1,97 @@
+@import "https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #faf6ef;
+  --ink: #2b3a4a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Noto Sans SC", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* 纸张微纹理 */
+.paper-texture {
+  background-image: radial-gradient(rgba(43, 58, 74, 0.035) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* 标题衬线 */
+.serif-title {
+  font-family: "Noto Serif SC", Georgia, serif;
+  letter-spacing: 0.02em;
+}
+
+/* 章节小序号英文衬线 */
+.en-caption {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  letter-spacing: 0.24em;
+  text-transform: lowercase;
+}
+
+/* 滚动出现动画 */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+
+/* 卡片悬停 */
+.card-lift {
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
+}
+.card-lift:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 24px 54px -20px rgba(43, 58, 74, 0.3);
+}
+
+/* 图片轻微放大 */
+.img-zoom {
+  overflow: hidden;
+}
+.img-zoom img {
+  transition: transform 0.7s ease;
+}
+.img-zoom:hover img {
+  transform: scale(1.05);
+}
+
+/* 导航毛玻璃 */
+.nav-glass {
+  background: rgba(250, 246, 239, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(43, 58, 74, 0.08);
+}
+
+/* 柔和呼吸按钮 */
+.btn-coral {
+  transition: transform 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
+}
+.btn-coral:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px -12px rgba(228, 119, 79, 0.55);
+}
+
+/* Hero 视差 */
+.hero-scene {
+  will-change: transform;
 }
