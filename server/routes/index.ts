@@ -1,6 +1,10 @@
 import { Router } from 'express';
+import cmsRouter from './cms';
 
 const router = Router();
+
+// CMS 内容管理与认证接口
+router.use(cmsRouter);
 
 // API 路由示例
 router.get('/api/hello', (req, res) => {
