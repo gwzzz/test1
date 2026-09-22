@@ -143,3 +143,9 @@ node-compile-cache/
 .vite/
 .coze-logs
 .codegraph/
+
+# 部署产物
+deploy/
+deploy.tar.gz
+dist-server/
+server.cjs
