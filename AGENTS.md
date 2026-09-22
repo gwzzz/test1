@@ -58,6 +58,13 @@
 - 线上服务：NSSM 注册的 `PaperStory` 服务（node server.cjs，端口 80）；PostgreSQL 为 Windows 服务（`PostgreSQL`）。
 - 初始化：开发环境 `initDatabase()` 全量建表自举；生产环境仅幂等创建 `admin_sessions`（业务表由部署 SQL 创建）。
 
+## 表格批量导入导出
+- 使用 `xlsx`（SheetJS）处理真实 .xlsx 文件，路由在 `server/routes/excel.ts`（全部 `/api/admin/*`，需 `x-session` 登录）。
+- `GET /api/admin/:kind/template`：下载导入模板（中文表头 + 示例行 + 填写说明 sheet，kind 为 books/products）。
+- `POST /api/admin/:kind/import`：multipart 上传 .xlsx，按中文表头映射列；ID 留空=新增、填已有 ID=更新（空单元格不覆盖原值）、「操作」列写 DELETE/删除=删除；返回 inserted/updated/deleted/skipped/errors。
+- `GET /api/admin/:kind/export?fields=title,isbn`：按字段导出；不传 fields 导出全部。内页多图用英文 `|` 分隔。
+- 前端方法在 `src/api.ts`（downloadTemplate/importExcel/exportExcel），后台 UI 在 `src/admin.ts` 的「表格批量管理」面板（勾选导出字段）。
+
 ## 包管理规范
 
 **仅允许使用 pnpm** 作为包管理器，**严禁使用 npm 或 yarn**。

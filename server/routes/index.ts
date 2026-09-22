@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import cmsRouter from './cms';
+import { excelRouter } from './excel';
 
 const router = Router();
 
 // CMS 内容管理与认证接口
 router.use(cmsRouter);
+
+// Excel 模板下载 / 批量导入 / 字段导出
+router.use(excelRouter);
 
 // API 路由示例
 router.get('/api/hello', (req, res) => {

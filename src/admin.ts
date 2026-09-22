@@ -12,6 +12,9 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  downloadTemplate,
+  importExcel,
+  exportExcel,
   type ContentData,
   type BookItem,
   type ProductItem,
@@ -19,6 +22,39 @@ import {
 
 const AGE_GROUPS = ['大班', '中班', '小班'];
 const NET_UNITS = ['包', '个', '片', '盒', '套', '支', '张', '本'];
+
+// 可导出字段（key 与后端一致，label 为中文表头）
+const BOOK_EXPORT_FIELDS: { key: string; label: string }[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'title', label: '书名' },
+  { key: 'series_name', label: '所属系列' },
+  { key: 'price', label: '定价' },
+  { key: 'isbn', label: '书号' },
+  { key: 'brief', label: '简介' },
+  { key: 'cover_img', label: '封面图' },
+  { key: 'pages', label: '内页图片' },
+  { key: 'format', label: '开本' },
+  { key: 'barcode_img', label: '条形码图片' },
+  { key: 'author', label: '署名' },
+  { key: 'clc', label: '中图分类号' },
+  { key: 'publish_date', label: '出版日期' },
+  { key: 'age_group', label: '年龄段' },
+  { key: 'publisher', label: '出版社' },
+  { key: 'category', label: '分类' },
+  { key: 'sort_order', label: '排序' },
+];
+const PRODUCT_EXPORT_FIELDS: { key: string; label: string }[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: '产品名' },
+  { key: 'category', label: '类别' },
+  { key: 'price', label: '定价' },
+  { key: 'barcode_img', label: '条形码图片' },
+  { key: 'barcode', label: '商品条码' },
+  { key: 'brand', label: '商标名' },
+  { key: 'net_unit', label: '净含量单位' },
+  { key: 'cover_img', label: '封面图' },
+  { key: 'sort_order', label: '排序' },
+];
 
 /** 后台主入口 */
 export function renderAdmin(app: HTMLElement): void {
@@ -164,11 +200,13 @@ async function showDashboard(): Promise<void> {
     const tabBody = document.getElementById('adminTabBody') as HTMLElement;
     if (active === 'books') {
       const books = data.books;
-      tabBody.innerHTML = `<section><div class="mb-6 flex justify-end"><button data-book-new class="btn-coral rounded-full bg-coral px-6 py-2 text-sm text-white">＋ 新增绘本</button></div><div id="bookList">${books.map(bookCard).join('')}</div></section>`;
+      tabBody.innerHTML = `<section>${batchPanelHtml('books')}<div class="mb-6 flex justify-end"><button data-book-new class="btn-coral rounded-full bg-coral px-6 py-2 text-sm text-white">＋ 新增绘本</button></div><div id="bookList">${books.map(bookCard).join('')}</div></section>`;
+      bindBatchPanel(tabBody, 'books');
       bindBookList(tabBody);
     } else {
       const products = data.products;
-      tabBody.innerHTML = `<section><div class="mb-6 flex justify-end"><button data-product-new class="btn-coral rounded-full bg-coral px-6 py-2 text-sm text-white">＋ 新增文创</button></div><div id="productList">${products.map(productCard).join('')}</div></section>`;
+      tabBody.innerHTML = `<section>${batchPanelHtml('products')}<div class="mb-6 flex justify-end"><button data-product-new class="btn-coral rounded-full bg-coral px-6 py-2 text-sm text-white">＋ 新增文创</button></div><div id="productList">${products.map(productCard).join('')}</div></section>`;
+      bindBatchPanel(tabBody, 'products');
       bindProductList(tabBody);
     }
   };
@@ -183,6 +221,128 @@ async function showDashboard(): Promise<void> {
       const page = document.getElementById('adminBody');
       page?.querySelector('[data-book-new]')?.scrollIntoView?.({ block: 'center' });
     });
+}
+
+// ---------- 批量管理面板（模板 / 导入 / 导出） ----------
+function batchPanelHtml(kind: 'books' | 'products'): string {
+  const fields = kind === 'books' ? BOOK_EXPORT_FIELDS : PRODUCT_EXPORT_FIELDS;
+  const name = kind === 'books' ? '绘本' : '文创';
+  return `
+  <div class="mb-8 rounded-2xl border border-ink/8 bg-paper-deep/40 p-5">
+    <p class="en-caption text-xs text-coral">batch tools</p>
+    <h3 class="serif-title text-lg font-bold">${name} · 表格批量管理</h3>
+    <p class="mt-1 text-xs leading-relaxed text-ink-soft">
+      下载模板 → 在 Excel/WPS 中填写（新增留空 ID，填 ID 更新，操作列写 DELETE 删除）→ 上传导入；也可勾选字段导出。
+    </p>
+    <div class="mt-4 flex flex-wrap gap-3">
+      <button data-tpl class="rounded-full border border-ink/20 px-4 py-2 text-xs hover:border-coral hover:text-coral">⬇ 下载导入模板</button>
+      <button data-pick class="rounded-full border border-ink/20 px-4 py-2 text-xs hover:border-coral hover:text-coral">⬆ 上传 Excel 导入</button>
+      <input data-file type="file" accept=".xlsx" class="hidden" />
+      <button data-export class="rounded-full bg-ink px-4 py-2 text-xs text-paper hover:bg-ink/85">⬇ 导出所选字段</button>
+      <button data-export-all class="rounded-full border border-ink/20 px-4 py-2 text-xs hover:border-coral hover:text-coral">⬇ 导出全部字段</button>
+    </div>
+    <div class="mt-4">
+      <p class="mb-2 text-xs text-ink-soft">选择导出字段（不勾选点“导出全部”即可）：</p>
+      <div class="flex flex-wrap gap-x-4 gap-y-1.5">
+        ${fields
+          .map(
+            (f) => `
+          <label class="flex items-center gap-1.5 text-xs text-ink-soft">
+            <input type="checkbox" data-field="${f.key}" class="accent-coral" />${f.label}
+          </label>`,
+          )
+          .join('')}
+      </div>
+    </div>
+    <div data-import-msg class="mt-3 hidden text-xs leading-relaxed"></div>
+  </div>`;
+}
+
+function bindBatchPanel(scope: HTMLElement, kind: 'books' | 'products'): void {
+  const refresh = async (): Promise<void> => {
+    // 导入后重新拉取最新数据并刷新当前标签
+    const app = document.getElementById('adminTabBody');
+    if (!app) return;
+    // 重置 showDashboard 内部缓存不便访问，直接重渲染当前面板列表
+    const fresh = await fetchContent();
+    if (kind === 'books') {
+      const list = app.querySelector<HTMLElement>('#bookList');
+      if (list) {
+        list.innerHTML = fresh.books.map(bookCard).join('');
+        bindBookList(app);
+      }
+    } else {
+      const list = app.querySelector<HTMLElement>('#productList');
+      if (list) {
+        list.innerHTML = fresh.products.map(productCard).join('');
+        bindProductList(app);
+      }
+    }
+  };
+
+  const showMsg = (html: string, ok: boolean): void => {
+    const el = scope.querySelector<HTMLElement>('[data-import-msg]');
+    if (!el) return;
+    el.classList.remove('hidden');
+    el.classList.toggle('text-coral-deep', !ok);
+    el.classList.toggle('text-moss', ok);
+    el.innerHTML = html;
+  };
+
+  scope.querySelector<HTMLElement>('[data-tpl]')?.addEventListener('click', async () => {
+    try {
+      await downloadTemplate(kind);
+    } catch (e) {
+      showMsg(`模板下载失败：${e instanceof Error ? e.message : '未知错误'}`, false);
+    }
+  });
+
+  const fileInput = scope.querySelector<HTMLInputElement>('[data-file]');
+  scope.querySelector<HTMLElement>('[data-pick]')?.addEventListener('click', () => {
+    fileInput?.click();
+  });
+
+  fileInput?.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    showMsg('正在导入，请稍候…', true);
+    try {
+      const r = await importExcel(kind, file);
+      const detail =
+        r.errors.length > 0 ? `<ul class="mt-1 list-disc pl-5">${r.errors.map((e) => `<li>${eat(e)}</li>`).join('')}</ul>` : '';
+      const allOk = r.skipped === 0 && r.errors.length === 0;
+      showMsg(
+        `导入完成：新增 <b>${r.inserted}</b>，更新 <b>${r.updated}</b>，删除 <b>${r.deleted}</b>，跳过 <b>${r.skipped}</b>。${detail}`,
+        allOk,
+      );
+      await refresh();
+    } catch (e) {
+      showMsg(`导入失败：${e instanceof Error ? e.message : '未知错误'}`, false);
+    } finally {
+      fileInput.value = '';
+    }
+  });
+
+  scope.querySelector<HTMLElement>('[data-export]')?.addEventListener('click', async () => {
+    const fields = Array.from(scope.querySelectorAll<HTMLInputElement>('[data-field]:checked')).map((c) => c.value);
+    if (fields.length === 0) {
+      showMsg('请先勾选要导出的字段，或直接点“导出全部字段”。', false);
+      return;
+    }
+    try {
+      await exportExcel(kind, fields);
+    } catch (e) {
+      showMsg(`导出失败：${e instanceof Error ? e.message : '未知错误'}`, false);
+    }
+  });
+
+  scope.querySelector<HTMLElement>('[data-export-all]')?.addEventListener('click', async () => {
+    try {
+      await exportExcel(kind, []);
+    } catch (e) {
+      showMsg(`导出失败：${e instanceof Error ? e.message : '未知错误'}`, false);
+    }
+  });
 }
 
 // ---------- 绘本 ----------

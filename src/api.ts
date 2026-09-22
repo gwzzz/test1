@@ -122,3 +122,59 @@ export async function uploadImage(file: File): Promise<string> {
   if (!res.ok || !json?.url) throw new Error(json?.error ?? `上传失败 (HTTP ${res.status})`);
   return json.url;
 }
+
+// ---------- Excel 模板 / 导入 / 导出 ----------
+export interface ImportResultData {
+  inserted: number;
+  updated: number;
+  deleted: number;
+  skipped: number;
+  errors: string[];
+}
+
+/** 下载导入模板，触发浏览器保存 */
+export async function downloadTemplate(kind: 'books' | 'products'): Promise<void> {
+  const res = await fetch(`/api/admin/${kind}/template`, {
+    headers: { 'x-session': getToken() },
+  });
+  if (!res.ok) throw new Error(`模板下载失败 (HTTP ${res.status})`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = kind === 'books' ? '绘本导入模板.xlsx' : '文创导入模板.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** 上传 Excel 批量导入（增/改/删） */
+export async function importExcel(kind: 'books' | 'products', file: File): Promise<ImportResultData> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`/api/admin/${kind}/import`, {
+    method: 'POST',
+    headers: { 'x-session': getToken() },
+    body: form,
+  });
+  const json = (await res.json().catch(() => null)) as
+    | { success?: boolean; result?: ImportResultData; error?: string }
+    | null;
+  if (!res.ok || !json?.result) throw new Error(json?.error ?? `导入失败 (HTTP ${res.status})`);
+  return json.result;
+}
+
+/** 按所选字段导出 Excel；fields 为空表示导出全部字段 */
+export async function exportExcel(kind: 'books' | 'products', fields: string[] = []): Promise<void> {
+  const qs = fields.length > 0 ? `?fields=${encodeURIComponent(fields.join(','))}` : '';
+  const res = await fetch(`/api/admin/${kind}/export${qs}`, {
+    headers: { 'x-session': getToken() },
+  });
+  if (!res.ok) throw new Error(`导出失败 (HTTP ${res.status})`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = kind === 'books' ? '绘本数据导出.xlsx' : '文创数据导出.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
+}
