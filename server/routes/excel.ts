@@ -14,8 +14,8 @@ import {
 
 export const excelRouter = Router();
 
-// 全部接口都需要管理员登录
-excelRouter.use(async (req: Request, res: Response, next: NextFunction) => {
+// 全部 /api/admin/* 接口都需要管理员登录（仅拦截 admin 前缀，避免误伤前台页面与公开接口）
+excelRouter.use('/api/admin', async (req: Request, res: Response, next: NextFunction) => {
   const token = req.header('x-session');
   if (!token) {
     res.status(401).json({ error: '请先登录' });
