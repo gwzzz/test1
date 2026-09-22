@@ -2,10 +2,12 @@
 // ABOUTME: Handles API routes and serves frontend in dev/prod modes
 
 import { createServer, type Server } from 'http';
+import path from 'path';
+import fs from 'fs';
 import express from 'express';
 import router from './routes/index';
 import { setupVite } from './vite';
-import { ensureEnv, isProd } from './src/storage/database/supabase-client';
+import { ensureEnv, isProd } from './env';
 
 // 必须在读取任何环境变量之前加载 .env
 ensureEnv();
@@ -33,6 +35,11 @@ async function startServer(): Promise<Server> {
   // 添加请求体解析
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // 上传文件静态服务（图片通过 /uploads/xxx 访问）
+  const uploadDir = process.env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+  app.use('/uploads', express.static(uploadDir));
 
   // 注册 API 路由
   app.use(router);

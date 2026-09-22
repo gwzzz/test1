@@ -1,66 +1,52 @@
 import './index.css';
 import { renderAdmin } from './admin';
-
-interface Book {
-  title: string;
-  en: string;
-  author: string;
-  desc: string;
-  img: string;
-}
-interface Product {
-  name: string;
-  price: string;
-  emoji: string;
-  tag: string;
-}
-interface ContentData {
-  books: Book[];
-  products: Product[];
-}
+import { fetchContent, fetchBook, fetchProduct, type BookItem, type ProductItem, type ContentData } from './api';
 
 // ---------- 默认素材（内容未从后端返回时兜底展示） ----------
-const DEFAULT_BOOKS: Book[] = [
-  { img: 'https://coze-coding-project.tos.coze.site/coze_storage_7687877259167825963/image/generate_image_fef078c8-5cfb-49b0-806a-27d208a13bd1.jpeg?sign=1821511797-da5922d401-0-e613406fb624512117b7225fddc3ef885ca25423f8f394e0e446f335100c5db3', title: '提灯的小狐狸', en: 'The Lantern Fox', author: '纸间 · 阿末', desc: '一只在雨夜里为迷路的旅人点亮灯笼的小狐狸，关于善意与陪伴的最温柔一课。' },
-  { img: 'https://coze-coding-project.tos.coze.site/coze_storage_7687877259167825963/image/generate_image_36ee6414-0e61-410b-8ce4-404b40e559cd.jpeg?sign=1821511797-0880e54fa5-0-87513fec4e09bc4d10c4c2f4a2a454c7c02402eba751e777d3fd2a6383ea01ce', title: '鲸鱼的星空', en: 'The Star Whale', author: '纸间 · 苏黎', desc: '会唱歌的鲸鱼驮着满天星辰游过深海，教孩子看见黑暗里的光。' },
-  { img: 'https://coze-coding-project.tos.coze.site/coze_storage_7687877259167825963/image/generate_image_65e87e22-89ba-4d2e-8b70-5162665d8ca9.jpeg?sign=1821511798-bb62f81047-0-cc9fd8d92ab54f3d07f1cebc719ad8c2ab69f264153b367b59fa6549616e03a5', title: '四季的茶杯', en: 'A Cup for Seasons', author: '纸间 · 十一', desc: '蜗牛与花草围着冒热气的茶杯，认真过好每一个小而具体的日子。' },
-  { img: 'https://coze-coding-project.tos.coze.site/coze_storage_7687877259167825963/image/generate_image_8593f13e-7804-4c30-b617-50c2c6faca91.jpeg?sign=1821511797-fc4c5b4a1c-0-d3bb20fa787bccdecf7333260fe26a3fa10d1c077cf28568ed729dd099ba5588', title: '我想慢慢长大', en: 'Cloud, Please Wait', author: '纸间 · 阿末', desc: '不爱长高的小云朵和它的小男孩朋友，一场关于成长与告别的对话。' },
+const DEFAULT_BOOKS: BookItem[] = [
+  { id: 0, cover_img: 'https://coze-coding-project.tos.coze.site/coze_storage_7687877259167825963/image/generate_image_fef078c8-5cfb-49b0-806a-27d208a13bd1.jpeg?sign=1821511797-da5922d401-0-e613406fb624512117b7225fddc3ef885ca25423f8f394e0e446f335100c5db3', title: '提灯的小狐狸', author: '纸间 · 阿末', brief: '一只在雨夜里为迷路的旅人点亮灯笼的小狐狸，关于善意与陪伴的最温柔一课。', series_name: '单本', price: '28.00', isbn: '', format: '', barcode_img: '', clc: '', publish_date: '', age_group: '大班', publisher: '', category: '', pages: [], sort_order: 0, created_at: '' },
+  { id: 0, cover_img: 'https://coze-coding-project.tos.coze.site/coze_storage_7687877259167825963/image/generate_image_36ee6414-0e61-410b-8ce4-404b40e559cd.jpeg?sign=1821511797-0880e54fa5-0-87513fec4e09bc4d10c4c2f4a2a454c7c02402eba751e777d3fd2a6383ea01ce', title: '鲸鱼的星空', author: '纸间 · 苏黎', brief: '会唱歌的鲸鱼驮着满天星辰游过深海，教孩子看见黑暗里的光。', series_name: '单本', price: '32.00', isbn: '', format: '', barcode_img: '', clc: '', publish_date: '', age_group: '中班', publisher: '', category: '', pages: [], sort_order: 0, created_at: '' },
+  { id: 0, cover_img: 'https://coze-coding-project.tos.coze.site/coze_storage_7687877259167825963/image/generate_image_65e87e22-89ba-4d2e-8b70-5162665d8ca9.jpeg?sign=1821511798-bb62f81047-0-cc9fd8d92ab54f3d07f1cebc719ad8c2ab69f264153b367b59fa6549616e03a5', title: '四季的茶杯', author: '纸间 · 十一', brief: '蜗牛与花草围着冒热气的茶杯，认真过好每一个小而具体的日子。', series_name: '单本', price: '30.00', isbn: '', format: '', barcode_img: '', clc: '', publish_date: '', age_group: '小班', publisher: '', category: '', pages: [], sort_order: 0, created_at: '' },
+  { id: 0, cover_img: 'https://coze-coding-project.tos.coze.site/coze_storage_7687877259167825963/image/generate_image_8593f13e-7804-4c30-b617-50c2c6faca91.jpeg?sign=1821511797-fc4c5b4a1c-0-d3bb20fa787bccdecf7333260fe26a3fa10d1c077cf28568ed729dd099ba5588', title: '我想慢慢长大', author: '纸间 · 阿末', brief: '不爱长高的小云朵和它的小男孩朋友，一场关于成长与告别的对话。', series_name: '单本', price: '29.00', isbn: '', format: '', barcode_img: '', clc: '', publish_date: '', age_group: '大班', publisher: '', category: '', pages: [], sort_order: 0, created_at: '' },
 ];
-const DEFAULT_PRODUCTS: Product[] = [
-  { name: '水彩帆布托特包', price: '¥68', emoji: '🎒', tag: '经典款' },
-  { name: '四季明信片套组', price: '¥36', emoji: '💌', tag: '新上架' },
-  { name: '搪瓷小狐狸徽章', price: '¥22', emoji: '📛', tag: '热销' },
-  { name: '原木手账书签', price: '¥18', emoji: '🍃', tag: '手作' },
+const DEFAULT_PRODUCTS: ProductItem[] = [
+  { id: 0, name: '水彩帆布托特包', category: '帆布包', price: '68', barcode_img: '', barcode: '', brand: '纸间故事', net_unit: '个', cover_img: '', sort_order: 0, created_at: '' },
+  { id: 0, name: '四季明信片套组', category: '文创', price: '36', barcode_img: '', barcode: '', brand: '纸间故事', net_unit: '套', cover_img: '', sort_order: 0, created_at: '' },
+  { id: 0, name: '搪瓷小狐狸徽章', category: '徽章', price: '22', barcode_img: '', barcode: '', brand: '纸间故事', net_unit: '个', cover_img: '', sort_order: 0, created_at: '' },
+  { id: 0, name: '原木手账书签', category: '文具', price: '18', barcode_img: '', barcode: '', brand: '纸间故事', net_unit: '张', cover_img: '', sort_order: 0, created_at: '' },
 ];
 const IMG_HERO = 'https://coze-coding-project.tos.coze.site/coze_storage_7687877259167825963/image/generate_image_b595ff20-d6c9-443f-80d2-5dfb5fd90893.jpeg?sign=1821511797-08f03540c8-0-211f1aaab3bcc276add4fb261e6263baf185a96ee6665c350029df88d278ee98';
 const IMG_CRAFT = 'https://coze-coding-project.tos.coze.site/coze_storage_7687877259167825963/image/generate_image_3a79aef6-6216-402b-9491-ca2620b92303.jpeg?sign=1821511798-8efcdc8724-0-2d59112af1a8534df42b2d4152c00d99c60b14e686cc73fc735065f4d0aadfde';
-const IMG_WHALE = DEFAULT_BOOKS[1].img;
+const IMG_WHALE = DEFAULT_BOOKS[1].cover_img;
 
-const BOOK_CARD_HTML = (b: Book): string => `
-  <article class="grid-in">
+const BOOK_CARD_HTML = (b: BookItem): string => `
+  <a href="#/book/${b.id}" class="grid-in group">
     <div class="img-zoom card-lift overflow-hidden rounded-3xl shadow-paper">
-      <img src="${b.img}" alt="${b.title}" class="aspect-[3/4] w-full object-cover" loading="lazy" onerror="this.style.opacity=0.25" />
+      <img src="${b.cover_img}" alt="${b.title}" class="aspect-[3/4] w-full object-cover" loading="lazy" onerror="this.style.opacity=0.25" />
     </div>
     <div class="mt-4 px-1">
-      <p class="en-caption text-[11px] text-gold">${b.en}</p>
+      <p class="en-caption text-[11px] text-gold">${b.series_name || 'picture book'}</p>
       <h3 class="serif-title mt-1 text-xl font-bold">${b.title}</h3>
       <p class="mt-1 text-xs text-ink-soft">${b.author}</p>
-      <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-soft">${b.desc}</p>
+      <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-soft">${b.brief}</p>
     </div>
-  </article>`;
+  </a>`;
 
-const PRODUCT_CARD_HTML = (p: Product): string => `
-  <div class="card-lift grid-in rounded-3xl border border-ink/5 bg-paper p-6 shadow-sm">
-    <span class="mb-4 inline-block rounded-full bg-moss/15 px-3 py-1 text-xs font-medium text-moss">${p.tag}</span>
-    <div class="mb-3 text-4xl">${p.emoji}</div>
+const PRODUCT_CARD_HTML = (p: ProductItem): string => `
+  <a href="#/product/${p.id}" class="card-lift grid-in rounded-3xl border border-ink/5 bg-paper p-6 shadow-sm group">
+    <span class="mb-4 inline-block rounded-full bg-moss/15 px-3 py-1 text-xs font-medium text-moss">${p.category || '文创'}</span>
+    <div class="mb-3 h-16 w-16 overflow-hidden rounded-2xl bg-paper-deep">
+      ${p.cover_img ? `<img src="${p.cover_img}" alt="" class="h-full w-full object-cover" onerror="this.style.opacity=0.15" />` : '<div class="flex h-full w-full items-center justify-center text-3xl">🎁</div>'}
+    </div>
     <h3 class="serif-title font-bold">${p.name}</h3>
+    <p class="mt-1 text-xs text-ink-soft">${p.brand} · 净含量 ${p.net_unit}</p>
     <div class="mt-4 flex items-center justify-between">
-      <span class="text-lg font-bold text-coral">${p.price}</span>
-      <button data-add="${p.name}" class="add-btn rounded-full border border-ink/15 px-4 py-1.5 text-xs font-medium transition-all hover:border-coral hover:bg-coral hover:text-white">放入篮子</button>
+      <span class="text-lg font-bold text-coral">¥${p.price}</span>
+      <span class="rounded-full border border-ink/15 px-4 py-1.5 text-xs font-medium transition-all group-hover:border-coral group-hover:bg-coral group-hover:text-white">查看详情</span>
     </div>
-  </div>`;
+  </a>`;
 
-function buildLayout(books: Book[], products: Product[]): string {
+function buildLayout(books: BookItem[], products: ProductItem[]): string {
   const features = [
     { icon: '🖌️', title: '手绘水彩', desc: '每一页都由插画师手工起稿、晕染上色，保留纸张与颜料的温度。' },
     { icon: '📖', title: '孩子气叙事', desc: '用孩子听得懂的语言，讲那些被大人忘记的、小而重要的心事。' },
@@ -311,17 +297,6 @@ function bindSiteInteractions(): void {
   });
 }
 
-async function loadContent(): Promise<ContentData | null> {
-  try {
-    const res = await fetch('/api/content');
-    if (!res.ok) return null;
-    const data = (await res.json()) as ContentData;
-    return data;
-  } catch {
-    return null;
-  }
-}
-
 function renderSite(app: HTMLElement): void {
   window.scrollTo(0, 0);
   app.innerHTML = buildLayout(DEFAULT_BOOKS, DEFAULT_PRODUCTS);
@@ -329,17 +304,118 @@ function renderSite(app: HTMLElement): void {
   bindGlobalInteractions();
 
   // 从后端刷新内容，保持与后台一致
-  void loadContent().then((data) => {
-    if (!data || (data.books.length === 0 && data.products.length === 0)) return;
-    const booksGrid = document.getElementById('booksGrid');
-    const craftGrid = document.getElementById('craftGrid');
-    if (booksGrid && data.books.length > 0) {
-      booksGrid.innerHTML = data.books.map(BOOK_CARD_HTML).join('');
-    }
-    if (craftGrid && data.products.length > 0) {
-      craftGrid.innerHTML = data.products.map(PRODUCT_CARD_HTML).join('');
-    }
-  });
+  void fetchContent()
+    .then((data) => {
+      if (!data || (data.books.length === 0 && data.products.length === 0)) return;
+      const booksGrid = document.getElementById('booksGrid');
+      const craftGrid = document.getElementById('craftGrid');
+      if (booksGrid && data.books.length > 0) {
+        booksGrid.innerHTML = data.books.map(BOOK_CARD_HTML).join('');
+      }
+      if (craftGrid && data.products.length > 0) {
+        craftGrid.innerHTML = data.products.map(PRODUCT_CARD_HTML).join('');
+      }
+    })
+    .catch(() => undefined);
+}
+
+// ---------- 详情页 ----------
+function bookDetailHTML(b: BookItem): string {
+  const meta = [
+    ['所属系列', b.series_name || '单本'],
+    ['书号', b.isbn],
+    ['开本信息', b.format],
+    ['署名', b.author],
+    ['中图分类号', b.clc],
+    ['出版日期', b.publish_date],
+    ['年龄段', b.age_group],
+    ['出版社', b.publisher],
+    ['分类', b.category],
+  ]
+    .filter(([, v]) => v)
+    .map(([k, v]) => `<div class="rounded-xl bg-paper-deep/60 px-4 py-3"><p class="text-xs text-ink-soft">${k}</p><p class="mt-0.5 text-sm font-medium">${v}</p></div>`)
+    .join('');
+
+  return `
+    <div class="min-h-screen paper-texture">
+      <div class="mx-auto max-w-6xl px-6 py-10">
+        <a href="#top" class="mb-8 inline-flex items-center gap-2 text-sm text-ink-soft hover:text-ink">← 返回首页 / 绘本系列</a>
+        <div class="grid gap-10 md:grid-cols-[240px_1fr]">
+          <div class="space-y-4">
+            <img src="${b.cover_img}" alt="${b.title}" class="aspect-[3/4] w-full rounded-3xl border border-ink/5 bg-paper object-cover shadow-paper" onerror="this.style.opacity=0.2" />
+            ${b.barcode_img ? `<img src="${b.barcode_img}" alt="条形码" class="w-full rounded-xl border border-ink/10 bg-white p-2" onerror="this.style.opacity=0.2" />` : ''}
+            <div class="rounded-2xl bg-paper px-5 py-4 text-center shadow-sm">
+              <p class="text-xs text-ink-soft">定价</p>
+              <p class="serif-title text-2xl font-black text-coral">¥${b.price}</p>
+            </div>
+          </div>
+          <div>
+            <p class="en-caption text-xs text-gold">${b.series_name || 'picture book'}</p>
+            <h1 class="serif-title mt-1 text-3xl font-black md:text-4xl">${b.title}</h1>
+            <p class="mt-2 text-sm text-ink-soft">${b.author}</p>
+            ${b.age_group ? `<span class="mt-3 inline-block rounded-full bg-moss/15 px-3 py-1 text-xs font-medium text-moss">年龄段：${b.age_group}</span>` : ''}
+            <p class="mt-5 leading-relaxed text-ink-soft">${b.brief}</p>
+            ${meta.length ? `<div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">${meta}</div>` : ''}
+          </div>
+        </div>
+        ${b.pages && b.pages.length ? `
+          <section class="mt-14">
+            <h2 class="serif-title text-2xl font-black">内页展示</h2>
+            <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              ${b.pages.map((u) => `<img src="${u}" alt="内页" class="aspect-[3/4] w-full rounded-2xl border border-ink/5 bg-paper object-cover shadow-sm" loading="lazy" onerror="this.style.opacity=0.15" />`).join('')}
+            </div>
+          </section>` : ''}
+      </div>
+    </div>`;
+}
+
+function productDetailHTML(p: ProductItem): string {
+  const meta = [
+    ['类别', p.category],
+    ['商品条码', p.barcode],
+    ['商标名', p.brand],
+    ['净含量', p.net_unit],
+  ]
+    .filter(([, v]) => v)
+    .map(([k, v]) => `<div class="rounded-xl bg-paper-deep/60 px-4 py-3"><p class="text-xs text-ink-soft">${k}</p><p class="mt-0.5 text-sm font-medium">${v}</p></div>`)
+    .join('');
+
+  return `
+    <div class="min-h-screen paper-texture">
+      <div class="mx-auto max-w-6xl px-6 py-10">
+        <a href="#top" class="mb-8 inline-flex items-center gap-2 text-sm text-ink-soft hover:text-ink">← 返回首页 / 文创周边</a>
+        <div class="grid gap-10 md:grid-cols-[280px_1fr]">
+          <div class="space-y-4">
+            <img src="${p.cover_img || ''}" alt="${p.name}" class="aspect-square w-full rounded-3xl border border-ink/5 bg-paper object-cover shadow-paper" onerror="this.style.opacity=0.2" />
+            ${p.barcode_img ? `<img src="${p.barcode_img}" alt="条形码" class="w-full rounded-xl border border-ink/10 bg-white p-2" onerror="this.style.opacity=0.2" />` : ''}
+            <div class="rounded-2xl bg-paper px-5 py-4 text-center shadow-sm">
+              <p class="text-xs text-ink-soft">定价</p>
+              <p class="serif-title text-2xl font-black text-coral">¥${p.price}</p>
+            </div>
+          </div>
+          <div>
+            <p class="en-caption text-xs text-coral">paper goodies</p>
+            <h1 class="serif-title mt-1 text-3xl font-black md:text-4xl">${p.name}</h1>
+            ${meta.length ? `<div class="mt-6 grid gap-3 sm:grid-cols-2">${meta}</div>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderDetail(kind: 'book' | 'product', app: HTMLElement): void {
+  window.scrollTo(0, 0);
+  app.innerHTML = `<div class="min-h-screen paper-texture"><div class="mx-auto max-w-6xl px-6 py-20 text-center text-ink-soft">正在加载…</div></div>`;
+  const idMatch = /#\/(book|product)\/(\d+)/.exec(window.location.hash);
+  const id = idMatch ? Number(idMatch[2]) : NaN;
+  const load = kind === 'book' ? fetchBook(id) : fetchProduct(id);
+  load
+    .then((item) => {
+      app.innerHTML = kind === 'book' ? bookDetailHTML(item as BookItem) : productDetailHTML(item as ProductItem);
+    })
+    .catch(() => {
+      app.innerHTML = `<div class="min-h-screen paper-texture"><div class="mx-auto max-w-6xl px-6 py-20 text-center text-coral-deep">内容不存在或加载失败。<br/><a href="#top" class="mt-4 inline-block text-ink-soft underline">返回首页</a></div></div>`;
+    });
 }
 
 // ---------- 启动（路由） ----------
@@ -352,8 +428,13 @@ export function initApp(): void {
   bindGlobalInteractions();
 
   const route = (): void => {
-    if (window.location.hash.startsWith('#/admin')) {
+    const hash = window.location.hash;
+    if (hash.startsWith('#/admin')) {
       void renderAdmin(app);
+    } else if (hash.startsWith('#/book/')) {
+      renderDetail('book', app);
+    } else if (hash.startsWith('#/product/')) {
+      renderDetail('product', app);
     } else {
       renderSite(app);
     }

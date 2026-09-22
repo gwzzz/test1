@@ -5,7 +5,7 @@ import type { Application, Request, Response } from 'express';
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { isProd } from './src/storage/database/supabase-client';
+import { isProd } from './env';
 
 /**
  * 集成 Vite 开发服务器（中间件模式）
