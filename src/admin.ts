@@ -199,12 +199,14 @@ async function showDashboard(): Promise<void> {
     data ??= await fetchContent();
     const tabBody = document.getElementById('adminTabBody') as HTMLElement;
     if (active === 'books') {
-      const books = data.books;
+      currentBooks = data.books;
+      const books = currentBooks;
       tabBody.innerHTML = `<section>${batchPanelHtml('books')}<div class="mb-6 flex justify-end"><button data-book-new class="btn-coral rounded-full bg-coral px-6 py-2 text-sm text-white">＋ 新增绘本</button></div><div id="bookList">${books.map(bookCard).join('')}</div></section>`;
       bindBatchPanel(tabBody, 'books');
       bindBookList(tabBody);
     } else {
-      const products = data.products;
+      currentProducts = data.products;
+      const products = currentProducts;
       tabBody.innerHTML = `<section>${batchPanelHtml('products')}<div class="mb-6 flex justify-end"><button data-product-new class="btn-coral rounded-full bg-coral px-6 py-2 text-sm text-white">＋ 新增文创</button></div><div id="productList">${products.map(productCard).join('')}</div></section>`;
       bindBatchPanel(tabBody, 'products');
       bindProductList(tabBody);
